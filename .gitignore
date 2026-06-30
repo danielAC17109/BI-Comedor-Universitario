@@ -45,3 +45,12 @@ Thumbs.db
 # ===============================
 
 *.log
+
+# Datasets de prueba
+DATA-SET/
+
+# Modelos entrenados
+*.pkl
+
+# Archivos temporales
+uploads/
