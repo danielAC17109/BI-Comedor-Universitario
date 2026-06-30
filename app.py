@@ -107,30 +107,34 @@ def upload():
 def staging():
 
     try:
-
-        # Cambio por la función centralizada
-        conexion = obtener_conexion()
+        engine = obtener_conexion()
 
         df = pd.read_sql(
-            "SELECT TOP 10 * FROM staging_comedor",
-            conexion
+            text("""
+                SELECT *
+                FROM staging_comedor
+                ORDER BY id_staging DESC
+                LIMIT 10
+            """),
+            engine
         )
 
         tabla = df.to_html(
-            classes='table table-striped',
+            classes='table table-striped table-dark',
             index=False
         )
 
-        conexion.close()
-
     except Exception as e:
 
-        print(e)
-
-        tabla = "No hay datos"
+        tabla = f"""
+        <div class="alert alert-danger">
+            ERROR AL MOSTRAR STAGING:<br>{e}
+        </div>
+        """
 
     return render_template(
         'staging.html',
+        logs=[],
         tabla=tabla
     )
 
@@ -217,22 +221,6 @@ def kpis():
 
 
 # DASHBOARD
-@app.route('/dashboard')
-def dashboard():
-
-    return render_template('dashboard.html')
-
-
-@app.route('/abrir_dashboard')
-def abrir_dashboard():
-
-    ruta = os.path.abspath(
-        'static/powerbi/dashboard_comedor.pbix'
-    )
-
-    os.startfile(ruta)
-
-    return redirect('/dashboard')
 
 # =========================
 # MAIN

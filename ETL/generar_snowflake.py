@@ -1,113 +1,96 @@
-from DATABASE.conexion import obtener_conexion
+from sqlalchemy import text
 from graphviz import Digraph
+
+from DATABASE.conexion import obtener_conexion
 
 
 def generar_modelo():
 
-    conexion = obtener_conexion()
-
-    cursor = conexion.cursor()
-
-    # ==========================================
-    # OBTENER TABLAS
-    # ==========================================
-
-    cursor.execute("""
-
-        SELECT TABLE_NAME
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_TYPE = 'BASE TABLE'
-
-    """)
-
-    tablas = cursor.fetchall()
+    engine = obtener_conexion()
 
     dot = Digraph('Snowflake', format='png')
-
     dot.attr(rankdir='LR')
 
-    # ==========================================
-    # CREAR TABLAS CON ATRIBUTOS
-    # ==========================================
+    with engine.connect() as conn:
 
-    for tabla in tablas:
+        tablas_result = conn.execute(text("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+        """))
 
-        nombre_tabla = tabla[0]
+        tablas = [row[0] for row in tablas_result.fetchall()]
 
-        cursor.execute(f"""
+        for nombre_tabla in tablas:
 
-            SELECT COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = '{nombre_tabla}'
+            columnas_result = conn.execute(
+                text("""
+                    SELECT column_name, data_type
+                    FROM information_schema.columns
+                    WHERE table_schema = 'public'
+                    AND table_name = :table_name
+                    ORDER BY ordinal_position
+                """),
+                {"table_name": nombre_tabla}
+            )
 
-        """)
+            columnas = columnas_result.fetchall()
 
-        columnas = cursor.fetchall()
+            atributos = ""
 
-        atributos = ""
+            for columna in columnas:
 
-        for columna in columnas:
+                nombre_columna = columna[0]
+                tipo_columna = columna[1]
 
-            atributos += f"{columna[0]}\\l"
+                atributos += f"{nombre_columna} : {tipo_columna}\\l"
 
-        etiqueta = f"""
+            etiqueta = f"{{ {nombre_tabla} | {atributos} }}"
 
-        {{
-            {nombre_tabla} |
-            {atributos}
-        }}
+            dot.node(
+                nombre_tabla,
+                etiqueta,
+                shape='record',
+                style='filled',
+                fillcolor='lightblue'
+            )
 
-        """
+        relaciones_result = conn.execute(text("""
+            SELECT
+                tc.table_name AS tabla_padre,
+                ccu.table_name AS tabla_referencia
+            FROM information_schema.table_constraints tc
 
-        dot.node(
-            nombre_tabla,
-            etiqueta,
-            shape='record',
-            style='filled',
-            fillcolor='lightblue'
-        )
+            INNER JOIN information_schema.key_column_usage kcu
+                ON tc.constraint_name = kcu.constraint_name
+                AND tc.table_schema = kcu.table_schema
 
-    # ==========================================
-    # RELACIONES FK
-    # ==========================================
+            INNER JOIN information_schema.constraint_column_usage ccu
+                ON ccu.constraint_name = tc.constraint_name
+                AND ccu.table_schema = tc.table_schema
 
-    cursor.execute("""
+            WHERE tc.constraint_type = 'FOREIGN KEY'
+            AND tc.table_schema = 'public'
+        """))
 
-        SELECT
-            tp.name AS tabla_padre,
-            tr.name AS tabla_referencia
+        relaciones = relaciones_result.fetchall()
 
-        FROM sys.foreign_keys fk
+        for relacion in relaciones:
 
-        INNER JOIN sys.tables tp
-            ON fk.parent_object_id = tp.object_id
+            padre = relacion[0]
+            referencia = relacion[1]
 
-        INNER JOIN sys.tables tr
-            ON fk.referenced_object_id = tr.object_id
-
-    """)
-
-    relaciones = cursor.fetchall()
-
-    for relacion in relaciones:
-
-        padre = relacion[0]
-        referencia = relacion[1]
-
-        dot.edge(
-            padre,
-            referencia
-        )
-
-    # ==========================================
-    # GUARDAR IMAGEN
-    # ==========================================
+            dot.edge(
+                padre,
+                referencia
+            )
 
     dot.render(
-        'static/img/snowflake',
+        filename='snowflake',
+        directory='static/img',
         cleanup=True
     )
 
-    conexion.close()
-
-    print("Modelo Snowflake COMPLETO ")
+    print("Modelo Snowflake COMPLETO")
