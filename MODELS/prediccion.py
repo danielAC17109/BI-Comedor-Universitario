@@ -40,7 +40,7 @@ def predecir_demanda():
 
     prediccion = modelo.predict(futuro)
 
-    conexion.close()
+    
 
     return round(prediccion[0], 2)
 
@@ -82,7 +82,7 @@ def predecir_ingresos():
 
     prediccion = modelo.predict(futuro)
 
-    conexion.close()
+    
 
     return round(prediccion[0], 2)
 
@@ -126,6 +126,6 @@ def predecir_consumo():
 
     prediccion = modelo.predict(futuro)
 
-    conexion.close()
+    
 
     return round(prediccion[0], 2)

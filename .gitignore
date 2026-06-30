@@ -54,3 +54,5 @@ DATA-SET/
 
 # Archivos temporales
 uploads/
+
+test_db.py

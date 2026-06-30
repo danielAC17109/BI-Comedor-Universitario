@@ -1,19 +1,19 @@
 import os
-import pyodbc
-
+from pathlib import Path
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
+
 
 def obtener_conexion():
 
-    conexion = pyodbc.connect(
+    database_url = os.getenv("DATABASE_URL")
 
-        f"DRIVER={{{os.getenv('DB_DRIVER')}}};"
-        f"SERVER={os.getenv('DB_SERVER')};"
-        f"DATABASE={os.getenv('DB_DATABASE')};"
-        f"Trusted_Connection={os.getenv('DB_TRUSTED')};"
+    print(database_url)   # <-- temporal
 
-    )
+    engine = create_engine(database_url)
 
-    return conexion
+    return engine

@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, redirect
 import pandas as pd
 import os
 
+
+from sqlalchemy import text
+
 # Importación de la conexión centralizada
 from DATABASE.conexion import obtener_conexion
 
@@ -58,44 +61,32 @@ def upload():
 
         archivo.save(ruta)
 
-        print("Archivo guardado 😹")
-
-        # =========================
-        # EJECUTAR ETL
-        # =========================
-
         resultado = procesar_excel(ruta)
-
-        print(resultado)
-
-        # =========================
-        # MOSTRAR 10 FILAS STAGING
-        # =========================
 
         try:
 
-            # Cambio por la función centralizada
-            conexion = obtener_conexion()
+            engine = obtener_conexion()
 
-            df = pd.read_sql(
-                "SELECT TOP 10 * FROM staging_comedor",
-                conexion
+            df_preview = pd.read_sql(
+                text("""
+                    SELECT *
+                    FROM staging_comedor
+                    ORDER BY id_staging DESC
+                    LIMIT 10
+                """),
+                engine
             )
 
-            tabla = df.to_html(
-                classes='table table-striped table-dark',
+            tabla = df_preview.to_html(
+                classes="table table-striped table-dark",
                 index=False
             )
 
-            conexion.close()
-
         except Exception as e:
 
-            print(e)
-
-            tabla = """
-            <div class='alert alert-danger'>
-                No se pudieron mostrar los datos de staging
+            tabla = f"""
+            <div class="alert alert-danger">
+                ERROR AL MOSTRAR STAGING:<br>{e}
             </div>
             """
 
