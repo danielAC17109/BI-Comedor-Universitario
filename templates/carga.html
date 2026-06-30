@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        Carga de Datos
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+<script>
+
+function confirmarCarga() {
+
+    let respuesta = confirm(
+        "¿Seguro que deseas procesar este archivo?"
+    );
+
+    if (respuesta == true) {
+
+        alert("Procesando archivo");
+
+        return true;
+
+    }
+
+    else {
+
+        alert("Operación cancelada");
+
+        return false;
+
+    }
+
+}
+
+</script>
+<body class="bg-light">
+   
+
+<div class="container mt-5">
+
+    <div class="card shadow p-5">
+
+        <h1 class="mb-4">
+
+            CARGA DE DATASET
+
+        </h1>
+        <div class="alert alert-primary text-center">
+
+            <h3>📤 PASO 1 DE 7</h3>
+
+            <h4>CARGA DE DATOS</h4>
+
+        </div>
+
+        <div class="alert alert-info">
+
+            Formatos permitidos:
+
+            ✔ .xlsx
+
+            ✔ .csv
+
+            ✔ .json
+
+        </div>
+
+        <form action="/upload"
+              method="POST"
+              enctype="multipart/form-data">
+
+            <input type="file"
+
+                   name="archivo"
+
+                   class="form-control"
+
+                   accept=".xlsx,.csv,.json"
+
+                   required>
+
+            <button class="btn btn-dark mt-4">
+
+                Procesar Archivo 
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+<<button
+    type="submit"
+    class="btn btn-success mt-4"
+    onclick="return confirmarCarga()">
+
+    Procesando Archivo
+
+</button>
+<div class="alert alert-danger mt-4">
+
+     Si subes otro archivo,
+    la base será reemplazada automáticamente.
+
+</div>
+
+</form>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
