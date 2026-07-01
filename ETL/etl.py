@@ -60,15 +60,22 @@ def procesar_excel(ruta_excel):
 
         with engine.begin() as conexion:
 
-            conexion.execute(text("DELETE FROM fact_consumo"))
-            conexion.execute(text("DELETE FROM dim_usuario"))
-            conexion.execute(text("DELETE FROM dim_clima"))
-            conexion.execute(text("DELETE FROM dim_menu"))
-            conexion.execute(text("DELETE FROM dim_tiempo"))
-            conexion.execute(text("DELETE FROM dim_aforo"))
-            conexion.execute(text("DELETE FROM staging_comedor"))
+            conexion.execute(text("""
+                TRUNCATE TABLE
+                    fact_consumo,
+                    staging_comedor,
+                    dim_usuario,
+                    dim_clima,
+                    dim_menu,
+                    dim_tiempo,
+                    dim_aforo,
+                    fact_kpis,
+                    analytics_eventos,
+                    iot_aforo
+                RESTART IDENTITY CASCADE
+            """))
 
-            logs.append("Base limpiada correctamente")
+            logs.append("Base limpiada correctamente con reinicio de IDs")
 
             df_staging.to_sql(
                 "staging_comedor",
