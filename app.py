@@ -224,11 +224,11 @@ def kpis():
 
 
 # DASHBOARD
-from flask import redirect
-
-@app.route("/dashboard")
+@app.route('/dashboard')
 def dashboard():
-    return redirect("https://bi-comedor-universitario-czappgu7tjwd3mrz697rdg.streamlit.app/")
+
+    return render_template("dashboard_redirect.html")
+
 # =========================
 # MAIN
 # =========================
