@@ -4,20 +4,55 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-import networkx as nx
+from matplotlib.patches import Rectangle, FancyArrowPatch
 from sqlalchemy import text
 
 from DATABASE.conexion import obtener_conexion
 
 
-def generar_modelo():
+def dibujar_tabla(ax, nombre, columnas, x, y, w=2.4, h=1.35):
+    ax.add_patch(Rectangle((x, y), w, h, facecolor="#d9edf7", edgecolor="black", linewidth=1.2))
+    ax.add_patch(Rectangle((x, y + h - 0.35), w, 0.35, facecolor="#b7dce8", edgecolor="black", linewidth=1.2))
 
+    ax.text(x + 0.08, y + h - 0.18, nombre, fontsize=9, fontweight="bold", va="center")
+
+    max_cols = 8
+    for i, col in enumerate(columnas[:max_cols]):
+        ax.text(x + 0.12, y + h - 0.55 - (i * 0.14), col, fontsize=7, va="center")
+
+    if len(columnas) > max_cols:
+        ax.text(x + 0.12, y + 0.12, "...", fontsize=8, va="center")
+
+
+def conectar(ax, origen, destino):
+    x1, y1, w1, h1 = origen
+    x2, y2, w2, h2 = destino
+
+    start = (x1 + w1, y1 + h1 / 2)
+    end = (x2, y2 + h2 / 2)
+
+    if x2 < x1:
+        start = (x1, y1 + h1 / 2)
+        end = (x2 + w2, y2 + h2 / 2)
+
+    flecha = FancyArrowPatch(
+        start,
+        end,
+        arrowstyle="-|>",
+        mutation_scale=12,
+        linewidth=1.2,
+        color="black",
+        connectionstyle="arc3,rad=0.05"
+    )
+
+    ax.add_patch(flecha)
+
+
+def generar_modelo():
     engine = obtener_conexion()
-    graph = nx.DiGraph()
     tablas_columnas = {}
 
     with engine.connect() as conn:
-
         tablas = conn.execute(text("""
             SELECT table_name
             FROM information_schema.tables
@@ -41,7 +76,6 @@ def generar_modelo():
             ).fetchall()
 
             tablas_columnas[nombre_tabla] = [c[0] for c in columnas]
-            graph.add_node(nombre_tabla)
 
         relaciones = conn.execute(text("""
             SELECT
@@ -58,73 +92,42 @@ def generar_modelo():
             AND tc.table_schema = 'public'
         """)).fetchall()
 
-        for origen, destino in relaciones:
-            graph.add_edge(origen, destino)
+    layout = {
+        "fact_consumo": (5.0, 3.0, 2.6, 2.1),
 
-    pos = {
-        "fact_consumo": (0, 0),
+        "dim_usuario": (1.2, 5.9, 2.4, 1.25),
+        "dim_satisfaccion": (5.0, 6.2, 2.4, 1.25),
+        "dim_aforo": (8.6, 5.3, 2.4, 1.1),
+        "dim_tiempo": (8.6, 4.0, 2.4, 1.3),
+        "dim_menu": (1.2, 3.6, 2.4, 1.25),
+        "dim_clima": (1.2, 1.4, 2.4, 1.25),
+        "dim_comedor": (5.0, 0.8, 2.4, 1.25),
 
-        "dim_tiempo": (3.2, 2.1),
-        "dim_usuario": (3.2, 1.2),
-        "dim_menu": (3.2, 0.3),
-        "dim_clima": (3.2, -0.6),
-        "dim_aforo": (3.2, -1.5),
-        "dim_comedor": (-3.2, 1.2),
-        "dim_satisfaccion": (-3.2, -1.2),
-
-        "staging_comedor": (-5.8, 0),
-        "fact_kpis": (0, -2.6),
+        "staging_comedor": (0.2, 6.9, 2.7, 2.0),
+        "fact_kpis": (9.0, 7.0, 2.5, 1.35),
     }
 
-    for tabla in graph.nodes:
-        if tabla not in pos:
-            pos[tabla] = (0, 3)
+    fig, ax = plt.subplots(figsize=(16, 10))
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 9)
+    ax.axis("off")
 
-    labels = {}
-    for tabla, columnas in tablas_columnas.items():
-        cols = "\n".join(columnas[:12])
-        labels[tabla] = f"{tabla}\n────────────\n{cols}"
+    for tabla, rect in layout.items():
+        if tabla in tablas_columnas:
+            x, y, w, h = rect
+            dibujar_tabla(ax, tabla, tablas_columnas[tabla], x, y, w, h)
 
-    plt.figure(figsize=(18, 10))
+    for origen, destino in relaciones:
+        if origen in layout and destino in layout:
+            conectar(ax, layout[origen], layout[destino])
 
-    nx.draw_networkx_nodes(
-        graph,
-        pos,
-        node_size=9000,
-        node_color="#ADD8E6",
-        edgecolors="black",
-        linewidths=1.2
-    )
-
-    nx.draw_networkx_edges(
-        graph,
-        pos,
-        arrows=True,
-        arrowstyle="-|>",
-        arrowsize=18,
-        width=1.3,
-        connectionstyle="arc3,rad=0.05"
-    )
-
-    nx.draw_networkx_labels(
-        graph,
-        pos,
-        labels=labels,
-        font_size=7,
-        font_family="monospace"
-    )
-
-    plt.title(
+    ax.set_title(
         "Modelo Data Warehouse - Copo de Nieve",
         fontsize=18,
-        fontweight="bold"
+        fontweight="bold",
+        pad=20
     )
-
-    plt.axis("off")
-    plt.tight_layout()
 
     os.makedirs("static/img", exist_ok=True)
     plt.savefig("static/img/snowflake.png", bbox_inches="tight", dpi=220)
     plt.close()
-
-    print("Modelo Snowflake generado correctamente")
