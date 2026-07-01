@@ -232,7 +232,59 @@ def dashboard():
 # =========================
 # MAIN
 # =========================
+@app.route('/api/iot/aforo', methods=['POST'])
+def registrar_aforo_iot():
 
+    data = request.get_json()
+
+    personas = int(data.get('personas_actuales', 0))
+    capacidad = int(data.get('capacidad', 2500))
+
+    porcentaje = round((personas / capacidad) * 100, 2)
+
+    if porcentaje >= 90:
+        estado = 'Crítico'
+    elif porcentaje >= 70:
+        estado = 'Alto'
+    elif porcentaje >= 40:
+        estado = 'Moderado'
+    else:
+        estado = 'Bajo'
+
+    engine = obtener_conexion()
+
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO iot_aforo
+                (
+                    personas_actuales,
+                    capacidad,
+                    porcentaje_ocupacion,
+                    estado
+                )
+                VALUES
+                (
+                    :personas,
+                    :capacidad,
+                    :porcentaje,
+                    :estado
+                )
+            """),
+            {
+                "personas": personas,
+                "capacidad": capacidad,
+                "porcentaje": porcentaje,
+                "estado": estado
+            }
+        )
+
+    return {
+        "mensaje": "Aforo registrado correctamente",
+        "personas_actuales": personas,
+        "porcentaje_ocupacion": porcentaje,
+        "estado": estado
+    }
 if __name__ == '__main__':
 
     app.run(debug=True)
