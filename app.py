@@ -255,7 +255,14 @@ def kpis():
         kpis=kpis_generales,
         iot=kpi_iot
     )
+# =========================
+# DASHBOARD
+# =========================
 
+@app.route('/dashboard')
+def dashboard():
+
+    return render_template("dashboard_redirect.html")
 # =========================
 # MAIN
 # =========================
