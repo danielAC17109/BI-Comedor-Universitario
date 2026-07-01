@@ -1,43 +1,31 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
+    <title>Abriendo Dashboard</title>
 
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-SB4QTTN1FM"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SB4QTTN1FM"></script>
 
-<script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
 
-window.dataLayer = window.dataLayer || [];
+        function gtag(){
+            dataLayer.push(arguments);
+        }
 
-function gtag(){
-    dataLayer.push(arguments);
-}
+        gtag('js', new Date());
+        gtag('config', 'G-SB4QTTN1FM');
 
-gtag('js', new Date());
+        gtag('event','dashboard_abierto');
 
-gtag('config', 'G-SB4QTTN1FM');
-
-gtag('event','dashboard_abierto');
-
-setTimeout(function(){
-
-window.location.href="https://bi-comedor-universitario-czappgu7tjwd3mrz697rdg.streamlit.app/";
-
-},600);
-
-</script>
-
+        setTimeout(function(){
+            window.location.href = "https://bi-comedor-universitario-czappgu7tjwd3mrz697rdg.streamlit.app/";
+        }, 600);
+    </script>
 </head>
 
 <body>
-
-<h2 style="text-align:center;margin-top:120px;">
-
-Abriendo Dashboard...
-
-</h2>
-
+    <h2 style="text-align:center;margin-top:120px;">
+        Abriendo Dashboard BI...
+    </h2>
 </body>
-
 </html>
