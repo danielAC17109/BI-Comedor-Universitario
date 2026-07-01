@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import text
 from DATABASE.conexion import obtener_conexion
-
+import random
 
 def procesar_excel(ruta_excel):
 
@@ -212,7 +212,46 @@ def procesar_excel(ruta_excel):
             total_fact = conexion.execute(
                 text("SELECT COUNT(*) FROM fact_consumo")
             ).scalar()
+            # SIMULACIÓN IOT - SENSOR DE AFORO
+            personas_iot = random.randint(100, 2300)
+            capacidad = 2500
+            porcentaje = round((personas_iot / capacidad) * 100, 2)
 
+            if porcentaje >= 90:
+                estado = "Crítico"
+            elif porcentaje >= 70:
+                estado = "Alto"
+            elif porcentaje >= 40:
+                estado = "Moderado"
+            else:
+                estado = "Bajo"
+
+            conexion.execute(
+                text("""
+                    INSERT INTO iot_aforo
+                    (
+                        personas_actuales,
+                        capacidad,
+                        porcentaje_ocupacion,
+                        estado
+                    )
+                    VALUES
+                    (
+                        :personas,
+                        :capacidad,
+                        :porcentaje,
+                        :estado
+                    )
+                """),
+                {
+                    "personas": personas_iot,
+                    "capacidad": capacidad,
+                    "porcentaje": porcentaje,
+                    "estado": estado
+                }
+            )
+
+            logs.append(f"Sensor IoT simulado: {personas_iot} personas ({porcentaje}%)")
             logs.append(f"Fact cargada con {total_fact} registros")
             logs.append("ETL COMPLETADO")
 
