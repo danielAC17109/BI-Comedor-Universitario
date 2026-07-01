@@ -47,24 +47,46 @@ total_comidas = int(df_kpis.loc[0, "total_comidas"] or 0)
 total_ingresos = float(df_kpis.loc[0, "total_ingresos"] or 0)
 promedio_consumo = float(df_kpis.loc[0, "promedio_consumo"] or 0)
 
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric("Registros", f"{total_registros:,}")
-col2.metric("Total comidas", f"{total_comidas:,}")
-col3.metric("Ingresos totales", f"S/ {total_ingresos:,.2f}")
-col4.metric("Promedio consumo", f"{promedio_consumo:,.2f}")
-
-
-st.divider()
-
-df_eventos = cargar_df("SELECT COUNT(*) AS total FROM analytics_eventos")
+# KPI de Google Analytics
+df_eventos = cargar_df("""
+    SELECT COUNT(*) AS total
+    FROM analytics_eventos
+""")
 
 total_eventos = int(df_eventos.loc[0, "total"])
 
-st.metric(
-    "Eventos registrados",
-    total_eventos
+# =========================
+# TARJETAS KPI
+# =========================
+
+col1, col2, col3, col4, col5 = st.columns(5)
+
+col1.metric(
+    "📄 Registros",
+    f"{total_registros:,}"
 )
+
+col2.metric(
+    "🍽️ Total comidas",
+    f"{total_comidas:,}"
+)
+
+col3.metric(
+    "💰 Ingresos",
+    f"S/ {total_ingresos:,.2f}"
+)
+
+col4.metric(
+    "📊 Promedio consumo",
+    f"{promedio_consumo:,.2f}"
+)
+
+col5.metric(
+    "📈 Interacciones ",
+    f"{total_eventos:,}"
+)
+
+st.divider()
 
 # =========================
 # GRÁFICOS
