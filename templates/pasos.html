@@ -12,10 +12,23 @@ gtag('js', new Date());
 gtag('config', 'G-SB4QTTN1FM');
 
 function registrarEvento(evento){
+
     gtag('event', evento, {
         event_category: 'Sistema BI',
         event_label: evento
     });
+
+    fetch('/api/analytics/evento', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            nombre_evento: evento,
+            pagina: window.location.pathname
+        })
+    });
+
 }
 </script>
 

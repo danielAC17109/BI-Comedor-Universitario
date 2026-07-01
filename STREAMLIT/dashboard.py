@@ -57,7 +57,14 @@ col4.metric("Promedio consumo", f"{promedio_consumo:,.2f}")
 
 st.divider()
 
+df_eventos = cargar_df("SELECT COUNT(*) AS total FROM analytics_eventos")
 
+total_eventos = int(df_eventos.loc[0, "total"])
+
+st.metric(
+    "Eventos registrados",
+    total_eventos
+)
 
 # =========================
 # GRÁFICOS
@@ -179,6 +186,76 @@ except Exception:
 
 st.divider()
 
+
+
+# =========================
+# GOOGLE ANALYTICS (EVENTOS)
+# =========================
+
+st.divider()
+
+st.header("📈 Analítica de uso de la plataforma")
+
+try:
+
+    df_eventos = cargar_df("""
+        SELECT *
+        FROM analytics_eventos
+        ORDER BY fecha_hora DESC
+    """)
+
+    if df_eventos.empty:
+
+        st.info("Todavía no existen eventos registrados.")
+
+    else:
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.subheader("Eventos por tipo")
+
+            eventos_tipo = (
+                df_eventos
+                .groupby("nombre_evento")
+                .size()
+                .reset_index(name="cantidad")
+            )
+
+            st.bar_chart(
+                eventos_tipo,
+                x="nombre_evento",
+                y="cantidad"
+            )
+
+        with col2:
+
+            st.subheader("Eventos por página")
+
+            eventos_pagina = (
+                df_eventos
+                .groupby("pagina")
+                .size()
+                .reset_index(name="cantidad")
+            )
+
+            st.bar_chart(
+                eventos_pagina,
+                x="pagina",
+                y="cantidad"
+            )
+
+        st.subheader("Historial de eventos")
+
+        st.dataframe(
+            df_eventos,
+            use_container_width=True
+        )
+
+except Exception as e:
+
+    st.warning(f"No se pudieron cargar las analíticas: {e}")
 
 # =========================
 # TABLA DETALLE

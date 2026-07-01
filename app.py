@@ -263,8 +263,9 @@ def kpis():
 def dashboard():
 
     return render_template("dashboard_redirect.html")
+
 # =========================
-# MAIN
+# SENSOR
 # =========================
 @app.route('/api/iot/aforo', methods=['POST'])
 def registrar_aforo_iot():
@@ -319,6 +320,48 @@ def registrar_aforo_iot():
         "porcentaje_ocupacion": porcentaje,
         "estado": estado
     }
+
+
+#=========================
+# GOOGLE ANALITYCS
+#========================
+@app.route('/api/analytics/evento', methods=['POST'])
+def registrar_evento_analytics():
+
+    data = request.get_json()
+
+    nombre_evento = data.get('nombre_evento')
+    pagina = data.get('pagina')
+
+    engine = obtener_conexion()
+
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO analytics_eventos
+                (
+                    nombre_evento,
+                    pagina
+                )
+                VALUES
+                (
+                    :nombre_evento,
+                    :pagina
+                )
+            """),
+            {
+                "nombre_evento": nombre_evento,
+                "pagina": pagina
+            }
+        )
+
+    return {
+        "mensaje": "Evento registrado",
+        "evento": nombre_evento
+    }
+# =========================
+# MAIN
+# =========================
 if __name__ == '__main__':
 
     app.run(debug=True)
