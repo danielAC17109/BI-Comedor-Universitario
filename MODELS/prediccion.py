@@ -1,131 +1,74 @@
+import os
+from pathlib import Path
+
+import joblib
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+from sqlalchemy import text
+
 from DATABASE.conexion import obtener_conexion
 
 
-# =========================================
-# PREDICCIÓN DEMANDA 
-# =========================================
+BASE_DIR = Path(__file__).resolve().parent
+
+modelo_demanda = joblib.load(BASE_DIR / "modelo_demanda.pkl")
+modelo_ingresos = joblib.load(BASE_DIR / "modelo_ingresos.pkl")
+modelo_consumo = joblib.load(BASE_DIR / "modelo_consumo.pkl")
+
 
 def predecir_demanda():
 
-    # Uso de la función importada
-    conexion = obtener_conexion()
+    engine = obtener_conexion()
 
-    query = """
+    df = pd.read_sql(
+        text("SELECT COUNT(*) AS total FROM fact_consumo"),
+        engine
+    )
 
-    SELECT
-        comidas_servidas
+    siguiente_indice = int(df.loc[0, "total"]) + 1
 
-    FROM fact_consumo
-
-    """
-
-    df = pd.read_sql(query, conexion)
-
-    # GENERAR ÍNDICE LIMPIO 
-    df['indice'] = range(1, len(df) + 1)
-
-    X = df[['indice']]
-    y = df['comidas_servidas']
-
-    modelo = LinearRegression()
-
-    modelo.fit(X, y)
-
-    # FUTURO 
-    futuro = pd.DataFrame({
-        'indice': [len(df) + 1]
-    })
-
-    prediccion = modelo.predict(futuro)
-
-    
+    prediccion = modelo_demanda.predict(
+        pd.DataFrame({"indice": [siguiente_indice]})
+    )
 
     return round(prediccion[0], 2)
 
-
-# =========================================
-# PREDICCIÓN INGRESOS 
-# =========================================
 
 def predecir_ingresos():
 
-    # Uso de la función importada
-    conexion = obtener_conexion()
+    engine = obtener_conexion()
 
-    query = """
+    df = pd.read_sql(
+        text("SELECT COUNT(*) AS total FROM fact_consumo"),
+        engine
+    )
 
-    SELECT
-        ingresos_cafeteria
+    siguiente_indice = int(df.loc[0, "total"]) + 1
 
-    FROM fact_consumo
-
-    """
-
-    df = pd.read_sql(query, conexion)
-
-    # GENERAR ÍNDICE LIMPIO 
-    df['indice'] = range(1, len(df) + 1)
-
-    X = df[['indice']]
-    y = df['ingresos_cafeteria']
-
-    modelo = LinearRegression()
-
-    modelo.fit(X, y)
-
-    # FUTURO 
-    futuro = pd.DataFrame({
-        'indice': [len(df) + 1]
-    })
-
-    prediccion = modelo.predict(futuro)
-
-    
+    prediccion = modelo_ingresos.predict(
+        pd.DataFrame({"indice": [siguiente_indice]})
+    )
 
     return round(prediccion[0], 2)
 
 
-# =========================================
-# PREDICCIÓN CONSUMO
-# =========================================
-
 def predecir_consumo():
 
-    # Uso de la función importada
-    conexion = obtener_conexion()
+    engine = obtener_conexion()
 
-    query = """
+    df = pd.read_sql(
+        text("""
+            SELECT AVG(da.personas_en_campus) AS promedio_aforo
+            FROM fact_consumo fc
+            INNER JOIN dim_aforo da
+                ON fc.id_aforo = da.id_aforo
+        """),
+        engine
+    )
 
-    SELECT
-        personas_en_campus,
-        comidas_servidas
+    promedio_aforo = float(df.loc[0, "promedio_aforo"] or 0)
 
-    FROM fact_consumo fc
-
-    INNER JOIN dim_aforo af
-        ON fc.id_aforo = af.id_aforo
-
-    """
-
-    df = pd.read_sql(query, conexion)
-
-    X = df[['personas_en_campus']]
-    y = df['comidas_servidas']
-
-    modelo = LinearRegression()
-
-    modelo.fit(X, y)
-
-    promedio_personas = df['personas_en_campus'].mean()
-
-    futuro = pd.DataFrame({
-        'personas_en_campus': [promedio_personas]
-    })
-
-    prediccion = modelo.predict(futuro)
-
-    
+    prediccion = modelo_consumo.predict(
+        pd.DataFrame({"personas_en_campus": [promedio_aforo]})
+    )
 
     return round(prediccion[0], 2)

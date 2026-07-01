@@ -49,8 +49,7 @@ Thumbs.db
 # Datasets de prueba
 DATA-SET/
 
-# Modelos entrenados
-*.pkl
+
 
 # Archivos temporales
 uploads/
