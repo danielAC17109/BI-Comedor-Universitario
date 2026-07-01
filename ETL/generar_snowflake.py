@@ -14,7 +14,6 @@ def generar_modelo():
 
     engine = obtener_conexion()
     graph = nx.DiGraph()
-
     tablas_columnas = {}
 
     with engine.connect() as conn:
@@ -28,7 +27,6 @@ def generar_modelo():
         """)).fetchall()
 
         for tabla in tablas:
-
             nombre_tabla = tabla[0]
 
             columnas = conn.execute(
@@ -42,10 +40,7 @@ def generar_modelo():
                 {"tabla": nombre_tabla}
             ).fetchall()
 
-            tablas_columnas[nombre_tabla] = [
-                columna[0] for columna in columnas
-            ]
-
+            tablas_columnas[nombre_tabla] = [c[0] for c in columnas]
             graph.add_node(nombre_tabla)
 
         relaciones = conn.execute(text("""
@@ -63,33 +58,73 @@ def generar_modelo():
             AND tc.table_schema = 'public'
         """)).fetchall()
 
-        for relacion in relaciones:
-            graph.add_edge(relacion[0], relacion[1])
+        for origen, destino in relaciones:
+            graph.add_edge(origen, destino)
+
+    pos = {
+        "fact_consumo": (0, 0),
+
+        "dim_tiempo": (3.2, 2.1),
+        "dim_usuario": (3.2, 1.2),
+        "dim_menu": (3.2, 0.3),
+        "dim_clima": (3.2, -0.6),
+        "dim_aforo": (3.2, -1.5),
+        "dim_comedor": (-3.2, 1.2),
+        "dim_satisfaccion": (-3.2, -1.2),
+
+        "staging_comedor": (-5.8, 0),
+        "fact_kpis": (0, -2.6),
+    }
+
+    for tabla in graph.nodes:
+        if tabla not in pos:
+            pos[tabla] = (0, 3)
 
     labels = {}
-
     for tabla, columnas in tablas_columnas.items():
-        texto_columnas = "\n".join(columnas[:10])
-        labels[tabla] = f"{tabla}\n────────\n{texto_columnas}"
+        cols = "\n".join(columnas[:12])
+        labels[tabla] = f"{tabla}\n────────────\n{cols}"
 
     plt.figure(figsize=(18, 10))
 
-    pos = nx.spring_layout(graph, seed=42, k=1.4)
+    nx.draw_networkx_nodes(
+        graph,
+        pos,
+        node_size=9000,
+        node_color="#ADD8E6",
+        edgecolors="black",
+        linewidths=1.2
+    )
 
-    nx.draw(
+    nx.draw_networkx_edges(
+        graph,
+        pos,
+        arrows=True,
+        arrowstyle="-|>",
+        arrowsize=18,
+        width=1.3,
+        connectionstyle="arc3,rad=0.05"
+    )
+
+    nx.draw_networkx_labels(
         graph,
         pos,
         labels=labels,
-        with_labels=True,
-        node_size=8500,
         font_size=7,
-        arrows=True
+        font_family="monospace"
     )
 
-    os.makedirs("static/img", exist_ok=True)
+    plt.title(
+        "Modelo Data Warehouse - Copo de Nieve",
+        fontsize=18,
+        fontweight="bold"
+    )
 
-    plt.title("Modelo Data Warehouse - Snowflake")
-    plt.savefig("static/img/snowflake.png", bbox_inches="tight", dpi=200)
+    plt.axis("off")
+    plt.tight_layout()
+
+    os.makedirs("static/img", exist_ok=True)
+    plt.savefig("static/img/snowflake.png", bbox_inches="tight", dpi=220)
     plt.close()
 
-    print("Modelo Snowflake generado con NetworkX")
+    print("Modelo Snowflake generado correctamente")
