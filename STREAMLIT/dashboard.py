@@ -58,6 +58,7 @@ col4.metric("Promedio consumo", f"{promedio_consumo:,.2f}")
 st.divider()
 
 
+
 # =========================
 # GRÁFICOS
 # =========================
@@ -143,7 +144,7 @@ st.divider()
 # KPI IOT
 # =========================
 
-st.subheader("📡 KPI IoT - Aforo en tiempo real")
+st.subheader(" KPI IoT - Aforo en tiempo real")
 
 try:
     df_iot = cargar_df("""

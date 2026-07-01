@@ -1,105 +1,133 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>
-        KPIs
-    </title>
-
+    <title>KPIs</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-
 </head>
 
 <body class="bg-light">
-<div class="alert alert-danger text-center">
 
-    <h3>🤖 PASO 6 DE 7</h3>
+{% include 'pasos.html' %}
 
-    <h4>KPIS</h4>
-
+<div class="alert alert-primary text-center">
+    <h3>📊 PASO 6 DE 7</h3>
+    <h4>CAPA SEMÁNTICA - KPIs</h4>
 </div>
+
 <div class="container mt-5">
 
-    <h1 class="mb-5">
+    <h2 class="mb-4">Indicadores principales</h2>
 
-        KPIs 
+    {% if kpis %}
 
-    </h1>
-
-    <div class="row">
+    <div class="row g-4">
 
         <div class="col-md-3">
-
-            <div class="card p-4 shadow">
-
-                <h5>Total Comidas</h5>
-
-                <h2>1200</h2>
-
+            <div class="card shadow text-center p-4">
+                <h5>Total registros</h5>
+                <h2>{{ kpis.total_registros }}</h2>
             </div>
-
         </div>
 
         <div class="col-md-3">
-
-            <div class="card p-4 shadow">
-
-                <h5>Ingresos</h5>
-
-                <h2>S/. 5400</h2>
-
+            <div class="card shadow text-center p-4">
+                <h5>Total comidas</h5>
+                <h2>{{ kpis.total_comidas }}</h2>
             </div>
-
         </div>
 
         <div class="col-md-3">
-
-            <div class="card p-4 shadow">
-
-                <h5>Ocupación</h5>
-
-                <h2>85%</h2>
-
+            <div class="card shadow text-center p-4">
+                <h5>Total ingresos</h5>
+                <h2>S/ {{ kpis.total_ingresos }}</h2>
             </div>
-
         </div>
 
         <div class="col-md-3">
-
-            <div class="card p-4 shadow">
-
-                <h5>Satisfacción</h5>
-
-                <h2>92%</h2>
-
+            <div class="card shadow text-center p-4">
+                <h5>Promedio consumo</h5>
+                <h2>{{ kpis.promedio_consumo }}</h2>
             </div>
-
         </div>
 
     </div>
 
-    <a href="/dashboard"
-       class="btn btn-primary mt-5">
+    {% else %}
 
-        Ver Dashboard
+    <div class="alert alert-warning">
+        No hay KPIs generales disponibles.
+    </div>
 
-    </a>
-    <div class="mt-5 text-center">
+    {% endif %}
 
-            <a href="/predicciones"
-               class="btn btn-secondary">
+    <hr class="my-5">
 
-                ← Regresar
+    <h2 class="mb-4"> KPI IoT - Sensor de aforo</h2>
 
-            </a>
+    {% if iot %}
 
+    <div class="row g-4">
+
+        <div class="col-md-3">
+            <div class="card shadow text-center p-4 border-info">
+                <h5>Personas actuales</h5>
+                <h2>{{ iot.personas_actuales }}</h2>
+            </div>
         </div>
+
+        <div class="col-md-3">
+            <div class="card shadow text-center p-4 border-secondary">
+                <h5>Capacidad</h5>
+                <h2>{{ iot.capacidad }}</h2>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow text-center p-4 border-success">
+                <h5>Ocupación</h5>
+                <h2>{{ iot.porcentaje_ocupacion }}%</h2>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow text-center p-4 border-warning">
+                <h5>Estado</h5>
+                <h2>{{ iot.estado }}</h2>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="progress mt-4" style="height: 30px;">
+        <div
+            class="progress-bar"
+            role="progressbar"
+            style="width: {{ iot.porcentaje_ocupacion }}%;">
+            {{ iot.porcentaje_ocupacion }}%
+        </div>
+    </div>
+
+    {% else %}
+
+    <div class="alert alert-info">
+        Todavía no hay datos enviados por el sensor IoT.
+    </div>
+
+    {% endif %}
+
+    <div class="mt-5">
+        <a href="/predicciones" class="btn btn-secondary">← Regresar</a>
+        <a href="/dashboard" class="btn btn-primary ms-3">Ver Dashboard →</a>
+    </div>
 
 </div>
 
-</body>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    registrarEvento("kpis_visualizados");
+});
+</script>
 
+</body>
 </html>

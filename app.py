@@ -220,14 +220,41 @@ def generar_prediccion():
 @app.route('/kpis')
 def kpis():
 
-    return render_template('kpis.html')
+    engine = obtener_conexion()
 
+    try:
+        df_kpis = pd.read_sql(
+            text("SELECT * FROM vw_kpis_generales"),
+            engine
+        )
 
-# DASHBOARD
-@app.route('/dashboard')
-def dashboard():
+        df_iot = pd.read_sql(
+            text("""
+                SELECT *
+                FROM iot_aforo
+                ORDER BY fecha_hora DESC
+                LIMIT 1
+            """),
+            engine
+        )
 
-    return render_template("dashboard_redirect.html")
+        kpis_generales = df_kpis.to_dict(orient="records")[0]
+
+        if not df_iot.empty:
+            kpi_iot = df_iot.to_dict(orient="records")[0]
+        else:
+            kpi_iot = None
+
+    except Exception as e:
+        print(e)
+        kpis_generales = None
+        kpi_iot = None
+
+    return render_template(
+        'kpis.html',
+        kpis=kpis_generales,
+        iot=kpi_iot
+    )
 
 # =========================
 # MAIN
